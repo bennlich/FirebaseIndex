@@ -80,24 +80,26 @@ will be called at that time.
 
 ### drop (key [,onComplete])
 
-Removes a key from the index. This does not remove the actual data record, but simply prevents it from being
-included in our filtered results.
+Removes a key from the index. This does not remove the actual data that it points to, just the key in our index,
+which also fires a child_removed event.
 
    - {String} key
    - {Function} [onComplete]
 
 ### child (key)
 
-Get a reference to the child data for a record in this index. If the child does not exist in this index
-then undefined is returned (unlike Firebase.child where a ref is guaranteed).
+Get a Firebase reference to the child data object. If the child does not exist in this index (even if it's in
+the original data path) then undefined is returned. Unlike Firebase.child where a ref is guaranteed, even if the
+data doesn't exist yet.
 
    - {String} key
 
 returns {Firebase|undefined}
 
 ### on (eventType [,callback] [,context])
-Creates an event listener on the data path. However, only records in this index are included in
-the results.
+
+Listen to child events on this index. The snapshots are the full data objects in the original data path, which are
+added/deleted/sorted according to the index's keys.
 
 When the callback is fired, the snapshot will contain the full data object from the data path.
 
@@ -107,12 +109,13 @@ When the callback is fired, the snapshot will contain the full data object from 
    
 ### off (eventType [,callback] [,context])
 
-Stop listening to a data record which was initialized from this index
+Stop listening to child events on this index. Must be called with same function and context as original
 
    - {String}   eventType  one of child_added, child_changed, child_moved, or child_removed
    - {Function} [callback]
    - {Object}   [context]
 
 ### dispose
+
 Remove all listeners and clear all memory resources consumed by this object. A new instance must
 be created to perform any further ops.
