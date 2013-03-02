@@ -1,0 +1,34 @@
+
+li {
+   padding: 2px;
+   background-color: #fafafa;
+   border: 1px solid #eee;
+   margin-bottom: 1px;
+}
+
+li.picked {
+   background-color: #eee;
+}
+
+li.picked:hover {
+   background-color: #eee;
+}
+
+li:hover {
+   cursor: pointer;
+   background-color: #e1fffd;
+}
+
+li.picked i[class^="icon-"] {
+   visibility: hidden;
+}
+
+.icon-plus-sign { color: green; }
+.icon-remove-sign { color: #900; }
+
+input[type="text"] {
+   font-size: 10px;
+   height: 12px;
+   line-height: 12px;
+   margin-bottom: 0;
+}
