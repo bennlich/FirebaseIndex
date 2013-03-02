@@ -29,6 +29,7 @@ jQuery(function ($) {
    $master.on('click', 'li', addToIndex);
    $index.on('click', 'i.icon-remove-sign', removeFromIndex);
    $index.on('change', 'input', resortIndex);
+   $('#reset').on('click', resetData);
 
 
    /**************************************************
@@ -158,4 +159,33 @@ jQuery(function ($) {
    function escapeHtml(txt) {
       return txt.replace('<', '&lt;').replace('>', '&gt;');
    }
+
+   function resetData() {
+      FB.set(FIXTURE_DATA);
+   }
+
+   var FIXTURE_DATA = {
+      "widgets" : {
+         "delta" : "it's green and triangular",
+         "golf" : "it's black and rectangular",
+         "echo" : "it's purple and flat",
+         "beta" : "it's blue and circular",
+         "foxtrot" : "it's orange and oval",
+         "charlie" : "it's yellow and conical",
+         "alpha" : "it's red and square"
+      },
+      "indices" : {
+         "widgets" : {
+            "delta" : {
+               ".value" : 1,
+               ".priority" : 100.0
+            },
+            "golf" : 1,
+            "alpha" : {
+               ".value" : 1,
+               ".priority" : 150.0
+            }
+         }
+      }
+   };
 });
