@@ -73,9 +73,9 @@ Note that if an index key exists which is not in the data path, this won't hurt 
 callback only gets invoked if data actually exists at that path. If, later, the data shows up, then child_added
 will be called at that time.
 
-@param {String} key  matches an id in the data path
-@param {String|Number} [priority]
-@param {Function} [onComplete]
+   - {String} key  matches an id in the data path
+   - {String|Number} [priority]
+   - {Function} [onComplete]
 
 
 ### drop (key [,onComplete])
@@ -83,15 +83,15 @@ will be called at that time.
 Removes a key from the index. This does not remove the actual data record, but simply prevents it from being
 included in our filtered results.
 
-@param {String} key
-@param {Function} [onComplete]
+   - {String} key
+   - {Function} [onComplete]
 
 ### child (key)
 
 Get a reference to the child data for a record in this index. If the child does not exist in this index
 then undefined is returned (unlike Firebase.child where a ref is guaranteed).
 
-@param {String} key
+   - {String} key
 @returns {Firebase|undefined}
 
 ### on (eventType [,callback] [,context])
@@ -100,17 +100,17 @@ the results.
 
 When the callback is fired, the snapshot will contain the full data object from the data path.
 
-@param {String}   eventType  one of child_added, child_changed, child_moved, or child_removed
-@param {Function} [callback]
-@param {Object}   [context]
+   - {String}   eventType  one of child_added, child_changed, child_moved, or child_removed
+   - {Function} [callback]
+   - {Object}   [context]
    
 ### off (eventType [,callback] [,context])
 
 Stop listening to a data record which was initialized from this index
 
-@param {String}   eventType  one of child_added, child_changed, child_moved, or child_removed
-@param {Function} [callback]
-@param {Object}   [context]
+   - {String}   eventType  one of child_added, child_changed, child_moved, or child_removed
+   - {Function} [callback]
+   - {Object}   [context]
 
 ### dispose
 Remove all listeners and clear all memory resources consumed by this object. A new instance must
