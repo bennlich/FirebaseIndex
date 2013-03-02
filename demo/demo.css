@@ -15,12 +15,15 @@ li.picked:hover {
 }
 
 li:hover {
-   cursor: pointer;
    background-color: #e1fffd;
 }
 
 li.picked i[class^="icon-"] {
    visibility: hidden;
+}
+
+#master li:hover, i.icon-remove-sign {
+   cursor: pointer;
 }
 
 .icon-plus-sign { color: green; }
