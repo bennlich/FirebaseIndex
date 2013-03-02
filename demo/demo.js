@@ -87,7 +87,7 @@ jQuery(function ($) {
 
    function resortIndex(e) {
       var $arrow = $(e.target), $el = $arrow.closest('li'), id = $el.attr('data-id'), pri = $el.find('input').val();
-      IDX.add(id, pri||null);
+      IDX.add(id, pri? parseInt(pri) : null);
    }
 
    /*****************************************
