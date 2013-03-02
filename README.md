@@ -92,7 +92,8 @@ Get a reference to the child data for a record in this index. If the child does 
 then undefined is returned (unlike Firebase.child where a ref is guaranteed).
 
    - {String} key
-@returns {Firebase|undefined}
+
+returns {Firebase|undefined}
 
 ### on (eventType [,callback] [,context])
 Creates an event listener on the data path. However, only records in this index are included in
