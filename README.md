@@ -109,9 +109,12 @@ which also fires a child_removed event.
 
 ### child (key)
 
-Get a Firebase reference to the child data object. If the child does not exist in this index (even if it's in the original data path) then undefined is returned. This deviates from the standard `Firebase.child` behavior, where a ref is guaranteed, even if the data doesn't exist yet.
+Get a Firebase reference to the child data object. If the child does not exist in this index (even if it's in the
+original data path) then undefined is returned. This deviates from the standard `Firebase.child` behavior, where
+a ref is guaranteed, even if the data doesn't exist yet.
 
-The child key must also specify a direct child (it cannot be used to access say, users/123/email, in the example above, only users/123)
+The child key must also specify a direct child (it cannot be used to access say, users/123/email, in the example
+above, only users/123)
 
    - {String} key
 
