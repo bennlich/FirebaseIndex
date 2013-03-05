@@ -6,8 +6,8 @@
 FirebaseIndex is a simple proxy that allows a larger data set to be filtered, sorted, and retrieved
 by an index.
 
-This tool uses the normal Firebase conventions and supports all the common listeners and operations
-(`child_added`, `child_changed`, `child_removed`, `child_moved`, `startAt`, `endAt`, `limit`, and `child`)
+This tool uses the normal Firebase conventions and supports most of the common listeners and operations:
+(`on`, `off`, `child_added`, `child_changed`, `child_removed`, `child_moved`, `startAt`, `endAt`, `limit`, and `child`)
 
 ### Live Demo: <a target="_blank" href="http://zenovations.github.com/FirebaseIndex">Real-time indexed data list</a>.
 
