@@ -6,9 +6,13 @@
 FirebaseIndex is a simple proxy that allows a larger data set to be filtered, sorted, and retrieved
 by an index.
 
+### Live Demo: <a target="_blank" href="http://zenovations.github.com/FirebaseIndex">Real-time indexed data list</a>.
+
 ## EXAMPLE
 
-For example, if I have a /users path with many records, stored something like this:
+Assume we want to retrieve a list of user objects, but only if they are in Bill's friend list.
+
+If our /users path looks something like this:
 
 ```javascript
 {
@@ -35,13 +39,14 @@ For example, if I have a /users path with many records, stored something like th
 }
 ```
 
-And I want to retrieve users, but only if they are in my friend list, I can do the following:
+We can do the following:
 
 ```javascript
-   var fb = new Firebase('https://???.firebaseio.com');
+   var fb = new Firebase('https://INSTANCE_NAME.firebaseio.com');
    
-   // create an index
-   var index = new FirebaseIndex(fb, 'users/789/friend_list', 'users');
+   // create an index using any two Firebase refs (they can even refer to different Firebase instances)
+   // the first ref is the index, the second is the actual data it refers to
+   var index = new FirebaseIndex(fb.child('users/789/friend_list'), fb.child('users'));
    
    // put some friends in it
    index.add('123');
@@ -50,6 +55,19 @@ And I want to retrieve users, but only if they are in my friend list, I can do t
    // list the user records for my friends
    index.on('child_added', function(ss) { /* invoked with Joe's and Kathy's user records */ });
 ```
+
+If our index were considerably larger, we could use query parameters to farther restrict the index results:
+
+```javascript
+   var fb = new Firebase('https://INSTANCE_NAME.firebaseio.com');
+
+   // apply query constraints to our index
+   var idxRef = fb.child('users/789/friend_list').limit(10).startAt(PRIORITY);
+
+   // create an index which references only a portion of the index
+   var index = new FirebaseIndex(idxRef, fb.child('users'));
+```
+
 
 ## Installation
 

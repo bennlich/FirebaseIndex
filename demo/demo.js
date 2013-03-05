@@ -12,7 +12,7 @@ jQuery(function ($) {
 
    // initialize our indexed data
    var FB      = new Firebase('https://i5ubv072aza.firebaseio-demo.com/');
-   var IDX     = new FirebaseIndex(FB, 'indices/widgets', 'widgets');
+   var IDX     = new FirebaseIndex(FB.child('indices/widgets'), FB.child('widgets'));
 
    // refs for our DOM nodes
    var $master = $('#master');
@@ -162,6 +162,7 @@ jQuery(function ($) {
 
    function resetData() {
       FB.set(FIXTURE_DATA);
+      window.location.reload();
    }
 
    var FIXTURE_DATA = {

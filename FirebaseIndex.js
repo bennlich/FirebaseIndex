@@ -6,10 +6,10 @@ var FirebaseIndex;
    "use strict";
    var undefined;
 
-   FirebaseIndex = function(firebase, indexPath, dataPath) {
+   FirebaseIndex = function(indexRef, dataRef) {
       bindAll(this, '_indexAdded', '_indexRemoved', '_indexMoved', '_childChanged');
-      this.ref = firebase.child(indexPath);
-      this.dataRef = firebase.child(dataPath);
+      this.indexRef = indexRef;
+      this.dataRef = dataRef;
       this.eventListeners = { 'child_added': [], 'child_moved': [], 'child_removed': [], 'child_changed': [] };
       this.childRefs = {};
       this._initChildListeners();
@@ -29,7 +29,7 @@ var FirebaseIndex;
     * @returns {*}
     */
    FirebaseIndex.prototype.add = function(key, priority, onComplete) {
-      var ref = this.ref.child(key);
+      var ref = this.indexRef.child(key);
       if( priority && typeof(priority) === 'function' ) {
          onComplete = priority;
          priority = undefined;
@@ -52,7 +52,7 @@ var FirebaseIndex;
     * @returns {*}
     */
    FirebaseIndex.prototype.drop = function(key, onComplete) {
-      this.ref.child(key).remove(onComplete);
+      this.indexRef.child(key).remove(onComplete);
       return this;
    };
 
@@ -154,17 +154,17 @@ var FirebaseIndex;
       this.childRefs.forEach(function(o) {
          o.dispose();
       });
-      this.ref.off('child_added', this._indexAdded);
-      this.ref.off('child_removed', this._indexRemoved);
-      this.ref.off('child_moved', this._indexMoved);
-      this.childRefs = this.eventListeners = this.ref = this.dataRef = this.addedAfter = null;
+      this.indexRef.off('child_added', this._indexAdded);
+      this.indexRef.off('child_removed', this._indexRemoved);
+      this.indexRef.off('child_moved', this._indexMoved);
+      this.childRefs = this.eventListeners = this.indexRef = this.dataRef = null;
    };
 
    /** @private */
    FirebaseIndex.prototype._initChildListeners = function() {
-      this.ref.on('child_added', this._indexAdded);
-      this.ref.on('child_removed', this._indexRemoved);
-      this.ref.on('child_moved', this._indexMoved);
+      this.indexRef.on('child_added', this._indexAdded);
+      this.indexRef.on('child_removed', this._indexRemoved);
+      this.indexRef.on('child_moved', this._indexMoved);
    };
 
    /** @private */
