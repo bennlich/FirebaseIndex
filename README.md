@@ -66,16 +66,13 @@ We can do the following:
    index.on('child_added', function(ss) { /* invoked with Joe's and Kathy's user records */ });
 ```
 
-If our index were considerably larger, we could use query parameters to farther restrict the index results:
+If our index were considerably larger, we could use query parameters to further restrict the index results:
 
 ```javascript
    var fb = new Firebase('https://INSTANCE_NAME.firebaseio.com');
 
-   // apply query constraints to our index (this must be done before creating the index)
-   var idxRef = fb.child('users/789/friend_list').limit(10).startAt(PRIORITY);
-
-   // create an index which references only a portion of the index
-   var index = new FirebaseIndex(idxRef, fb.child('users'));
+   // apply query constraints to our index (it is not possible to call add/drop on the Query)
+   var idxRef = new FirebaseIndex(fb.child('users/789/friend_list'), fb.child('users')).startAt(PRIORITY).limit(5);
 ```
 
 
@@ -137,21 +134,21 @@ Stop listening to child events on this index. Must be called with same function 
    - {number} [priority]
    - {string} [name]
 
-returns {FirebaseIndexQuery} a read-only version of this index
+returns {FirebaseIndexQuery} a read-only version of this index (can't call add/drop on this object)
 
 ### endAt (priority, name)
 
    - {number} [priority]
    - {string} [name]
 
-returns {FirebaseIndexQuery} a read-only version of this index
+returns {FirebaseIndexQuery} a read-only version of this index (can't call add/drop on this object)
 
 
 ### limit (limit)
 
    - {number} limit
 
-returns {FirebaseIndexQuery} a read-only version of this index
+returns {FirebaseIndexQuery} a read-only version of this index (can't call add/drop on this object)
 
 ### dispose
 
