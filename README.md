@@ -7,7 +7,14 @@ FirebaseIndex is a simple proxy that allows a larger data set to be filtered, so
 by an index.
 
 This tool uses the normal Firebase conventions and supports most of the common listeners and operations:
-(`on`, `off`, `child_added`, `child_changed`, `child_removed`, `child_moved`, `startAt`, `endAt`, `limit`, and `child`)
+[on][on] (child_added, child_changed, child_removed, child_moved), [off][off], [startAt][startAt], [endAt][endAt], [limit][limit], and [child][child]
+
+   [on]: https://www.firebase.com/docs/javascript/firebase/on.html
+   [off]: https://www.firebase.com/docs/javascript/firebase/off.html
+   [startAt]: https://www.firebase.com/docs/javascript/firebase/startat.html
+   [endAt]: https://www.firebase.com/docs/javascript/firebase/endat.html
+   [limit]: https://www.firebase.com/docs/javascript/firebase/limit.html
+   [child]: https://www.firebase.com/docs/javascript/firebase/child.html
 
 ### Live Demo: <a target="_blank" href="http://zenovations.github.com/FirebaseIndex">Real-time indexed data list</a>.
 
@@ -64,7 +71,7 @@ If our index were considerably larger, we could use query parameters to farther 
 ```javascript
    var fb = new Firebase('https://INSTANCE_NAME.firebaseio.com');
 
-   // apply query constraints to our index
+   // apply query constraints to our index (this must be done before creating the index)
    var idxRef = fb.child('users/789/friend_list').limit(10).startAt(PRIORITY);
 
    // create an index which references only a portion of the index
@@ -98,7 +105,6 @@ will be called at that time.
    - {String|Number} [priority]
    - {Function} [onComplete]
 
-
 ### drop (key [,onComplete])
 
 Removes a key from the index. This does not remove the actual data that it points to, just the key in our index,
@@ -130,7 +136,7 @@ When the callback is fired, the snapshot will contain the full data object from 
    - {String}   eventType  one of child_added, child_changed, child_moved, or child_removed
    - {Function} [callback]
    - {Object}   [context]
-   
+
 ### off (eventType [,callback] [,context])
 
 Stop listening to child events on this index. Must be called with same function and context as original
@@ -138,6 +144,27 @@ Stop listening to child events on this index. Must be called with same function 
    - {String}   eventType  one of child_added, child_changed, child_moved, or child_removed
    - {Function} [callback]
    - {Object}   [context]
+
+### startAt (priority, name)
+
+   - {number} [priority]
+   - {string} [name]
+
+returns {FirebaseIndexQuery} a read-only version of this index
+
+### endAt (priority, name)
+
+   - {number} [priority]
+   - {string} [name]
+
+returns {FirebaseIndexQuery} a read-only version of this index
+
+
+### limit (limit)
+
+   - {number} limit
+
+returns {FirebaseIndexQuery} a read-only version of this index
 
 ### dispose
 

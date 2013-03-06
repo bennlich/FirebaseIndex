@@ -7,11 +7,9 @@ var FirebaseIndex;
    var undefined;
 
    FirebaseIndex = function(indexRef, dataRef) {
-      bindAll(this, '_indexAdded', '_indexRemoved', '_indexMoved', '_childChanged');
       this.indexRef = indexRef;
       this.dataRef = dataRef;
-      this.eventListeners = { 'child_added': [], 'child_moved': [], 'child_removed': [], 'child_changed': [] };
-      this.childRefs = {};
+      this._initMemberVars();
       this._initChildListeners();
    };
 
@@ -147,6 +145,32 @@ var FirebaseIndex;
    };
 
    /**
+    * @param {number} [priority]
+    * @param {string} [name]
+    * @return {FirebaseIndexQuery} a read-only version of this index
+    */
+   FirebaseIndex.prototype.startAt = function(priority, name) {
+      return new FirebaseIndexQuery(this.indexRef.startAt(priority, name), this.dataRef);
+   };
+
+   /**
+    * @param {number} [priority]
+    * @param {string} [name]
+    * @return {FirebaseIndexQuery} a read-only version of this index
+    */
+   FirebaseIndex.prototype.endAt = function(priority, name) {
+      return new FirebaseIndexQuery(this.indexRef.endAt(priority, name), this.dataRef);
+   };
+
+   /**
+    * @param {number} limit
+    * @return {FirebaseIndexQuery} a read-only version of this index
+    */
+   FirebaseIndex.prototype.limit = function(limit) {
+      return new FirebaseIndexQuery(this.indexRef.limit(limit), this.dataRef);
+   };
+
+   /**
     * Remove all listeners and clear all memory resources consumed by this object. A new instance must
     * be created to perform any further ops.
     */
@@ -158,6 +182,13 @@ var FirebaseIndex;
       this.indexRef.off('child_removed', this._indexRemoved);
       this.indexRef.off('child_moved', this._indexMoved);
       this.childRefs = this.eventListeners = this.indexRef = this.dataRef = null;
+   };
+
+   /** @private */
+   FirebaseIndex.prototype._initMemberVars = function() {
+      bindAll(this, '_indexAdded', '_indexRemoved', '_indexMoved', '_childChanged');
+      this.eventListeners = { 'child_added': [], 'child_moved': [], 'child_removed': [], 'child_changed': [] };
+      this.childRefs = {};
    };
 
    /** @private */
@@ -227,6 +258,20 @@ var FirebaseIndex;
       return this;
    };
 
+
+   function FirebaseIndexQuery(indexRef, dataRef) {
+      this.indexRef = indexRef;
+      this.dataRef = dataRef;
+      this._initMemberVars();
+      this._initChildListeners();
+   }
+
+   inheritsPrototype(FirebaseIndexQuery, FirebaseIndex, {
+      add: function() { throw new Error('cannot add to index on read-only FirebaseIndexQueue instance (after calling limit, endAt, or startAt)'); },
+      drop: function() { throw new Error('cannot drop from index on read-only FirebaseIndexQueue instance (after calling limit, endAt, or startAt)'); },
+      child: function() { throw new Error('cannot access child on read-only FirebaseIndexQueue instance (after calling limit, endAt, or startAt)'); }
+   });
+
    function notifyListeners(list, ss, prevId) {
       list.forEach(function(o) {
          o.fn(ss, prevId);
@@ -292,6 +337,20 @@ var FirebaseIndex;
       args.forEach(function(m) {
          o[m] = o[m].bind(o);
       });
+   }
+
+   function inheritsPrototype(to, from, fns) {
+      var key;
+      for (key in from.prototype) {
+         if (from.prototype.hasOwnProperty(key)) {
+            to.prototype[key] = from.prototype[key];
+         }
+      }
+      for (key in fns) {
+         if (fns.hasOwnProperty(key)) {
+            to.prototype[key] = fns[key];
+         }
+      }
    }
 
    if (!Function.prototype.bind) {
