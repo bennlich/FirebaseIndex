@@ -71,8 +71,11 @@ If our index were considerably larger, we could use query parameters to further 
 ```javascript
    var fb = new Firebase('https://INSTANCE_NAME.firebaseio.com');
 
-   // apply query constraints to our index (it is not possible to call add/drop on the Query)
-   var idxRef = new FirebaseIndex(fb.child('users/789/friend_list'), fb.child('users')).startAt(PRIORITY).limit(5);
+   // create an index
+   var index = new FirebaseIndex(fb.child('users/789/friend_list'), fb.child('users'));
+
+   // apply query constraints to our index (it is not possible to call add/drop on this object)
+   var filteredIndex = index.startAt(PRIORITY).limit(LIMIT);
 ```
 
 
