@@ -10,7 +10,6 @@ var FirebaseIndex;
       this.indexRef = indexRef;
       this.dataRef = dataRef;
       this._initMemberVars();
-      this._initChildListeners();
    };
 
    /**
@@ -55,17 +54,6 @@ var FirebaseIndex;
    };
 
    /**
-    * Get a reference to the child data for a record in this index. If the child does not exist in this index
-    * then undefined is returned (unlike Firebase.child where a ref is guaranteed).
-    *
-    * @param {String} key
-    * @returns {Firebase|undefined}
-    */
-   FirebaseIndex.prototype.child = function(key) {
-      return this.childRefs[key]? this.childRefs[key].ref : undefined;
-   };
-
-   /**
     * Creates an event listener on the data path. However, only records in this index are included in
     * the results.
     *
@@ -78,6 +66,7 @@ var FirebaseIndex;
     */
    FirebaseIndex.prototype.on = function(eventType, callback, context) {
       var fn;
+      this._initChildListeners();
       // handle optional arguments
       if( arguments.length === 2 && typeof(callback) === 'object' ) {
          context = callback;
@@ -187,15 +176,19 @@ var FirebaseIndex;
    /** @private */
    FirebaseIndex.prototype._initMemberVars = function() {
       bindAll(this, '_indexAdded', '_indexRemoved', '_indexMoved', '_childChanged');
+      this.initialized = false;
       this.eventListeners = { 'child_added': [], 'child_moved': [], 'child_removed': [], 'child_changed': [] };
       this.childRefs = {};
    };
 
    /** @private */
    FirebaseIndex.prototype._initChildListeners = function() {
-      this.indexRef.on('child_added', this._indexAdded);
-      this.indexRef.on('child_removed', this._indexRemoved);
-      this.indexRef.on('child_moved', this._indexMoved);
+      if( !this.initialized ) { // lazy initialize so that limit/startAt/endAt don't generate superfluous listeners
+         this.initialized = true;
+         this.indexRef.on('child_added', this._indexAdded);
+         this.indexRef.on('child_removed', this._indexRemoved);
+         this.indexRef.on('child_moved', this._indexMoved);
+      }
    };
 
    /** @private */
@@ -263,7 +256,6 @@ var FirebaseIndex;
       this.indexRef = indexRef;
       this.dataRef = dataRef;
       this._initMemberVars();
-      this._initChildListeners();
    }
 
    inheritsPrototype(FirebaseIndexQuery, FirebaseIndex, {

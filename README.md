@@ -7,7 +7,7 @@ FirebaseIndex is a simple proxy that allows a larger data set to be filtered, so
 by an index.
 
 This tool uses the normal Firebase conventions and supports most of the common listeners and operations:
-[on][on] (child_added, child_changed, child_removed, child_moved), [off][off], [startAt][startAt], [endAt][endAt], [limit][limit], and [child][child]
+[on][on] (child_added, child_changed, child_removed, child_moved), [off][off], [startAt][startAt], [endAt][endAt], and [limit][limit]
 
    [on]: https://www.firebase.com/docs/javascript/firebase/on.html
    [off]: https://www.firebase.com/docs/javascript/firebase/off.html
@@ -112,19 +112,6 @@ which also fires a child_removed event.
 
    - {String} key
    - {Function} [onComplete]
-
-### child (key)
-
-Get a Firebase reference to the child data object. If the child does not exist in this index (even if it's in the
-original data path) then undefined is returned. This deviates from the standard `Firebase.child` behavior, where
-a ref is guaranteed, even if the data doesn't exist yet.
-
-The child key must also specify a direct child (it cannot be used to access say, users/123/email, in the example
-above, only users/123)
-
-   - {String} key
-
-returns {Firebase|undefined}
 
 ### on (eventType [,callback] [,context])
 
