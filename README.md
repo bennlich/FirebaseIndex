@@ -78,6 +78,17 @@ If our index were considerably larger, we could use query parameters to further 
    var filteredIndex = index.startAt(PRIORITY).limit(LIMIT);
 ```
 
+If the data path is dynamic and depends on the id in some sophisticated way, dataRef can be replaced with a
+function. For example, if we only wanted to retrieve each user's name from the user list above, we could
+utilize the following:
+
+```javascript
+   var fb = new Firebase('https://INSTANCE_NAME.firebaseio.com');
+
+   // create an index with a dynamic data path
+   var index = new FirebaseIndex(fb.child('users/789/friend_list'), function(key) { return fb.child('users/'+key+'/name'); } );
+```
+
 
 ## Installation
 
@@ -91,6 +102,14 @@ If our index were considerably larger, we could use query parameters to further 
 ```
 
 ## API
+
+### FirebaseIndex <constructor> ( indexRef, dataRef )
+
+If dataRef is a function, it will be passed the key from indexRef, and it must return a Firebase reference to the
+data object. For example: `function( key ) { return new Firebase('.../path/'+key+'/subpath'); }`
+
+   - {Firebase} indexRef  the list of keys to use as our filtered list
+   - {Firebase|Function} dataRef the master data to actually return
 
 ### add (key [,priority] [,onComplete])
 

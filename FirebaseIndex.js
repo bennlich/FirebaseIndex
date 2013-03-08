@@ -8,7 +8,7 @@ var FirebaseIndex;
 
    FirebaseIndex = function(indexRef, dataRef) {
       this.indexRef = indexRef;
-      this.dataRef = dataRef;
+      this.dataRef = typeof(dataRef) === 'function'? dataRef : function(key) { return dataRef.child(key); };
       this._initMemberVars();
    };
 
@@ -195,7 +195,7 @@ var FirebaseIndex;
    FirebaseIndex.prototype._indexAdded = function(ss, prevId) {
       storeChildRef(this.childRefs, this._childChanged, ss, prevId);
       // monitor the record for changes and defer the handling to this._childChanged
-      this.dataRef.child(ss.name()).on('value', this._childChanged);
+      this.dataRef(ss.name()).on('value', this._childChanged.bind(this, ss.name()));
    };
 
    /** @private */
@@ -203,7 +203,7 @@ var FirebaseIndex;
       var key = ss.name();
       if( this.childRefs[key] ) {
          this.childRefs[key].dispose();
-         notifyListeners(this.eventListeners['child_removed'], ss);
+         notifyListeners(this.eventListeners['child_removed'], ss, key);
       }
    };
 
@@ -212,16 +212,16 @@ var FirebaseIndex;
       var key = ss.name();
       if( this.childRefs[key] ) {
          this.childRefs[key].prevId = prevId;
-         notifyListeners(this.eventListeners['child_moved'], ss, prevId);
+         notifyListeners(this.eventListeners['child_moved'], ss, key, prevId);
       }
    };
 
    /** @private */
-   FirebaseIndex.prototype._childChanged = function(ss) {
+   FirebaseIndex.prototype._childChanged = function(key, ss) {
       // The index and the actual data set may vary slightly; this could be intentional since
       // we could monitor things that come and go frequently. So what we do here is look at the
       // actual data, compare it to the index, and send notifications that jive with our findings
-      var v = ss.val(), key = ss.name(), eventType = null, prevId = undefined, ref = this.childRefs[key];
+      var v = ss.val(), eventType = null, prevId = undefined, ref = this.childRefs[key];
       if( v === null ) {
          // null means data doesn't exist; if it's in our list, it was deleted
          // if it's not in our list, it never existed in the first place
@@ -238,7 +238,7 @@ var FirebaseIndex;
          //eventType = 'child_added';
          prevId = this.childRefs[key].prevId;
          waitFor(this.childRefs, prevId, function() {
-            notifyListeners(this.eventListeners['child_added'], ss, prevId);
+            notifyListeners(this.eventListeners['child_added'], ss, key, prevId);
             ref.loaded = true;
             ref.def && ref.def.resolve();
          }.bind(this));
@@ -247,7 +247,7 @@ var FirebaseIndex;
          // the value has been changed
          eventType = 'child_changed';
       }
-      eventType && notifyListeners(this.eventListeners[eventType], ss);
+      eventType && notifyListeners(this.eventListeners[eventType], ss, key);
       return this;
    };
 
@@ -264,9 +264,9 @@ var FirebaseIndex;
       child: function() { throw new Error('cannot access child on read-only FirebaseIndexQueue instance (after calling limit, endAt, or startAt)'); }
    });
 
-   function notifyListeners(list, ss, prevId) {
+   function notifyListeners(list, ss, key, prevId) {
       list.forEach(function(o) {
-         o.fn(ss, prevId);
+         o.fn(wrapSnap(ss, key), prevId);
       });
    }
 
@@ -343,6 +343,11 @@ var FirebaseIndex;
             to.prototype[key] = fns[key];
          }
       }
+   }
+
+   function wrapSnap(ss, key) {
+      ss.name = function() { return key; };
+      return ss;
    }
 
    if (!Function.prototype.bind) {
