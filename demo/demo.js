@@ -12,7 +12,7 @@ jQuery(function ($) {
 
    // initialize our indexed data
    var FB      = new Firebase('https://i5ubv072aza.firebaseio-demo.com/');
-   var IDX     = new FirebaseIndex(FB.child('indices/widgets'), FB.child('widgets'));
+   var IDX     = new FirebaseIndex(FB.child('index'), FB.child('widgets'));
 
    // refs for our DOM nodes
    var $master = $('#master');
@@ -88,7 +88,13 @@ jQuery(function ($) {
 
    function resortIndex(e) {
       var $arrow = $(e.target), $el = $arrow.closest('li'), id = $el.attr('data-id'), pri = $el.find('input').val();
-      IDX.add(id, pri? parseInt(pri) : null);
+      if( parseInt(pri) == pri ) {
+         IDX.add(id, pri? parseInt(pri) : null);
+      }
+      else {
+         alert('must be a number for this demo');
+         $el.find('input').val(null);
+      }
    }
 
    /*****************************************
@@ -114,7 +120,7 @@ jQuery(function ($) {
    }
 
    function initIndex() {
-      var ref = FB.child('indices/widgets');
+      var ref = FB.child('index');
 
       ref.on('child_added', function(ss, afterId) {
          var id = ss.name();
@@ -175,17 +181,15 @@ jQuery(function ($) {
          "charlie" : "it's yellow and conical",
          "alpha" : "it's red and square"
       },
-      "indices" : {
-         "widgets" : {
-            "delta" : {
-               ".value" : 1,
-               ".priority" : 100.0
-            },
-            "golf" : 1,
-            "alpha" : {
-               ".value" : 1,
-               ".priority" : 150.0
-            }
+      "index" : {
+         "delta" : {
+            ".value" : 1,
+            ".priority" : 100.0
+         },
+         "golf" : 1,
+         "alpha" : {
+            ".value" : 1,
+            ".priority" : 150.0
          }
       }
    };

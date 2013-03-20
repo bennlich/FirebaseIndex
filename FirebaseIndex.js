@@ -77,7 +77,7 @@ var FirebaseIndex;
          case 'child_added':
             fn = addEventListener(this.eventListeners[eventType], callback, context);
             // mimic Firebase behavior by sending any pre-existing records when on('child_added') is invoked
-            notifyExistingRecs(this.childRefs, fn);
+            notifyExistingRecs(this.dataRef, this.childRefs, fn);
             break;
          case 'child_changed':
          case 'child_removed':
@@ -266,7 +266,10 @@ var FirebaseIndex;
 
    function notifyListeners(list, ss, key, prevId) {
       list.forEach(function(o) {
-         o.fn(wrapSnap(ss, key), prevId);
+         // make the calls async so they match client expectations
+         // Firebase can call them synchonously if the data is already local
+         // which messes up Promise.progress() and any async callbacks
+         defer(function() { o.fn(wrapSnap(ss, key), prevId) });
       });
    }
 
@@ -280,15 +283,20 @@ var FirebaseIndex;
       return fn;
    }
 
-   function notifyExistingRecs(refs, callback) {
+   function notifyExistingRecs(dataPathFn, refs, callback) {
       var key;
       for (key in refs) {
-         if (refs.hasOwnProperty(key)) {
-            refs[key].ref.once('value', function(ss) {
-               if( ss.val() !== null ) { callback(ss); }
-            });
+         if (refs.hasOwnProperty(key) && refs[key].loaded) {
+            // must be external because key is mutable and we use it in a closure
+            getValAndNotify(dataPathFn(key), key, callback);
          }
       }
+   }
+
+   function getValAndNotify(ref, key, callback) {
+      ref.once('value', function(ss) {
+         if( ss.val() !== null ) { defer(function() { callback(wrapSnap(ss, key)); }); }
+      });
    }
 
    function storeChildRef(list, cb, ss, prevId) {
@@ -345,6 +353,28 @@ var FirebaseIndex;
       }
    }
 
+   var defer;
+   if( typeof(_) === 'object' && _ && typeof(_.defer) === 'function' ) {
+      // if underscore is available, use it
+      defer = _.defer;
+   }
+   else {
+      // otherwise, hope setTimeout hasn't been tinkered with
+      defer = function(fn) {
+         return setTimeout(fn, 0);
+      }
+   }
+
+   /**
+    * Because we're getting the value from a random path, which could be a function, the keys may not match.
+    * For instance, our reference key could be group/member/1234 and our data path could be user/1234/public/widget,
+    * in which case, if we use ss.name() on the data path, we get a key of "widget" which is clearly not right.
+    * So this method normalizes the keys.
+    *
+    * @param {Firebase} ss  reference to the data path
+    * @param {String} key  key from the index
+    * @returns {*}
+    */
    function wrapSnap(ss, key) {
       ss.name = function() { return key; };
       return ss;
