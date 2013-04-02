@@ -90,6 +90,13 @@ utilize the following:
 ```
 
 
+You can use FirebaseIndex in node.js as well:
+
+```javascript
+   var FirebaseIndex = require('./FirebaseIndex.js').FirebaseIndex;
+   var index = new FirebaseIndex( idxRef, dataRef );
+```
+
 ## Installation
 
 ```

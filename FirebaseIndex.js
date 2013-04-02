@@ -2,15 +2,15 @@
  *
  *************************************/
 var FirebaseIndex;
-(function ($) { // jQuery isn't required, but it helps with async ops
+(function (exports) { // jQuery isn't required, but it helps with async ops
    "use strict";
    var undefined;
 
-   FirebaseIndex = function(indexRef, dataRef) {
+   function FirebaseIndex(indexRef, dataRef) {
       this.indexRef = indexRef;
       this.dataRef = typeof(dataRef) === 'function'? dataRef : function(key) { return dataRef.child(key); };
       this._initMemberVars();
-   };
+   }
 
    /**
     * Add a key to a FirebaseIndex path and include that data record in our results. A priority may optionally be
@@ -26,16 +26,21 @@ var FirebaseIndex;
     * @returns {*}
     */
    FirebaseIndex.prototype.add = function(key, priority, onComplete) {
+      this.addValue(key, 1, priority, onComplete);
+      return this;
+   };
+
+   FirebaseIndex.prototype.addValue = function(key, value, priority, onComplete) {
       var ref = this.indexRef.child(key);
       if( priority && typeof(priority) === 'function' ) {
          onComplete = priority;
          priority = undefined;
       }
       if( priority !== undefined ) {
-         ref.setWithPriority(1, priority, onComplete);
+         ref.setWithPriority(value, priority, onComplete);
       }
       else {
-         ref.set(1, onComplete);
+         ref.set(value, onComplete);
       }
       return this;
    };
@@ -82,6 +87,7 @@ var FirebaseIndex;
          case 'child_changed':
          case 'child_removed':
          case 'child_moved':
+         case 'index_value':
             fn = addEventListener(this.eventListeners[eventType], callback, context);
             break;
          default:
@@ -110,6 +116,7 @@ var FirebaseIndex;
          case 'child_changed':
          case 'child_moved':
          case 'child_removed':
+         case 'index_value':
             var events = this.eventListeners[eventType];
             // This tricky little construct just removes all matches.
             // Since we're going to remove elements from `events` each
@@ -170,14 +177,23 @@ var FirebaseIndex;
       this.indexRef.off('child_added', this._indexAdded);
       this.indexRef.off('child_removed', this._indexRemoved);
       this.indexRef.off('child_moved', this._indexMoved);
+      this.indexRef.off('child_changed', this._indexValue);
       this.childRefs = this.eventListeners = this.indexRef = this.dataRef = null;
+   };
+
+   FirebaseIndex.prototype.name = function() {
+      return this.indexRef.name();
+   };
+
+   FirebaseIndex.prototype.parent = function() {
+      return this.indexRef.parent();
    };
 
    /** @private */
    FirebaseIndex.prototype._initMemberVars = function() {
-      bindAll(this, '_indexAdded', '_indexRemoved', '_indexMoved', '_childChanged');
+      bindAll(this, '_indexAdded', '_indexRemoved', '_indexMoved', '_childChanged', '_indexValue');
       this.initialized = false;
-      this.eventListeners = { 'child_added': [], 'child_moved': [], 'child_removed': [], 'child_changed': [] };
+      this.eventListeners = { 'child_added': [], 'child_moved': [], 'child_removed': [], 'child_changed': [], 'index_value': [] };
       this.childRefs = {};
    };
 
@@ -188,6 +204,7 @@ var FirebaseIndex;
          this.indexRef.on('child_added', this._indexAdded);
          this.indexRef.on('child_removed', this._indexRemoved);
          this.indexRef.on('child_moved', this._indexMoved);
+         this.indexRef.on('child_changed', this._indexValue);
       }
    };
 
@@ -200,19 +217,29 @@ var FirebaseIndex;
 
    /** @private */
    FirebaseIndex.prototype._indexRemoved = function(ss) {
-      var key = ss.name();
-      if( this.childRefs[key] ) {
-         this.childRefs[key].dispose();
-         notifyListeners(this.eventListeners['child_removed'], ss, key);
+      var indexData = this.childRefs[ss.name()];
+      if( indexData ) {
+         indexData.dispose();
+         notifyListeners(this.eventListeners['child_removed'], ss, indexData);
       }
    };
 
    /** @private */
    FirebaseIndex.prototype._indexMoved = function(ss, prevId) {
-      var key = ss.name();
-      if( this.childRefs[key] ) {
-         this.childRefs[key].prevId = prevId;
-         notifyListeners(this.eventListeners['child_moved'], ss, key, prevId);
+      var indexData = this.childRefs[ss.name()];
+      if(indexData ) {
+         indexData.prevId = prevId;
+         notifyListeners(this.eventListeners['child_moved'], ss, indexData);
+      }
+   };
+
+   /** @private */
+   FirebaseIndex.prototype._indexValue = function(ss) {
+      console.log('_indexValue', ss.val(), ss.name()); //debug
+      var indexData = this.childRefs[ss.name()];
+      if(indexData ) {
+         indexData.idxValue = ss.val();
+         notifyListeners(this.eventListeners['index_value'], ss, indexData);
       }
    };
 
@@ -226,7 +253,7 @@ var FirebaseIndex;
          // null means data doesn't exist; if it's in our list, it was deleted
          // if it's not in our list, it never existed in the first place
          // we just ignore it until some data shows up or it's removed from the index
-         if( this.childRefs[key] ) {
+         if( ref ) {
             eventType = 'child_removed';
          }
       }
@@ -236,9 +263,9 @@ var FirebaseIndex;
          // this event, that way they arrive at the client in the same order they came
          // out of the index list, which prevents prevId from not existing
          //eventType = 'child_added';
-         prevId = this.childRefs[key].prevId;
+         prevId = ref.prevId;
          waitFor(this.childRefs, prevId, function() {
-            notifyListeners(this.eventListeners['child_added'], ss, key, prevId);
+            notifyListeners(this.eventListeners['child_added'], ss, ref);
             ref.loaded = true;
             ref.def && ref.def.resolve();
          }.bind(this));
@@ -247,7 +274,7 @@ var FirebaseIndex;
          // the value has been changed
          eventType = 'child_changed';
       }
-      eventType && notifyListeners(this.eventListeners[eventType], ss, key);
+      eventType && notifyListeners(this.eventListeners[eventType], ss, ref);
       return this;
    };
 
@@ -264,12 +291,12 @@ var FirebaseIndex;
       child: function() { throw new Error('cannot access child on read-only FirebaseIndexQueue instance (after calling limit, endAt, or startAt)'); }
    });
 
-   function notifyListeners(list, ss, key, prevId) {
+   function notifyListeners(list, ss, ref) {
       list.forEach(function(o) {
          // make the calls async so they match client expectations
          // Firebase can call them synchonously if the data is already local
          // which messes up Promise.progress() and any async callbacks
-         defer(function() { o.fn(wrapSnap(ss, key), prevId) });
+         defer(function() { o.fn(wrapSnap(ss, ref.key), ref.prevId, ref.idxValue) });
       });
    }
 
@@ -307,6 +334,8 @@ var FirebaseIndex;
          loaded: false,
          def: $? $.Deferred() : null,
          ref: ss.ref(),
+         key: key,
+         idxValue: ss.val(),
          dispose: function() {
             childRef.off('value', cb);
             delete list[key];
@@ -365,16 +394,6 @@ var FirebaseIndex;
       }
    }
 
-   /**
-    * Because we're getting the value from a random path, which could be a function, the keys may not match.
-    * For instance, our reference key could be group/member/1234 and our data path could be user/1234/public/widget,
-    * in which case, if we use ss.name() on the data path, we get a key of "widget" which is clearly not right.
-    * So this method normalizes the keys.
-    *
-    * @param {Firebase} ss  reference to the data path
-    * @param {String} key  key from the index
-    * @returns {*}
-    */
    function wrapSnap(ss, key) {
       ss.name = function() { return key; };
       return ss;
@@ -439,4 +458,6 @@ var FirebaseIndex;
       }
    }
 
-})(jQuery);
+   exports.FirebaseIndex = FirebaseIndex;
+
+})(typeof(exports) === 'object' && exports? exports : window);
