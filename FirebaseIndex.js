@@ -2,7 +2,7 @@
  *
  *************************************/
 var FirebaseIndex;
-(function (exports) { // jQuery isn't required, but it helps with async ops
+(function ($, exports) { // jQuery isn't required, but it helps with async ops
    "use strict";
    var undefined;
 
@@ -459,4 +459,4 @@ var FirebaseIndex;
 
    exports.FirebaseIndex = FirebaseIndex;
 
-})(typeof(exports) === 'object' && exports? exports : window);
+})(jQuery, typeof(exports) === 'object' && exports? exports : window);
