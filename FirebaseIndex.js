@@ -235,7 +235,6 @@ var FirebaseIndex;
 
    /** @private */
    FirebaseIndex.prototype._indexValue = function(ss) {
-      console.log('_indexValue', ss.val(), ss.name()); //debug
       var indexData = this.childRefs[ss.name()];
       if(indexData ) {
          indexData.idxValue = ss.val();
