@@ -212,7 +212,11 @@ var FirebaseIndex;
    FirebaseIndex.prototype._indexAdded = function(ss, prevId) {
       storeChildRef(this.childRefs, this._childChanged, ss, prevId);
       // monitor the record for changes and defer the handling to this._childChanged
-      this.dataRef(ss.name()).on('value', this._childChanged.bind(this, ss.name()));
+      var ref = this.dataRef(ss.name());
+      var fn = ref.on('value', this._childChanged.bind(this, ss.name()));
+      this.childRefs[ss.name()].dataSub = {
+         dispose: function() { ref.off('value', fn); }
+      }
    };
 
    /** @private */
@@ -252,6 +256,8 @@ var FirebaseIndex;
          // null means data doesn't exist; if it's in our list, it was deleted
          // if it's not in our list, it never existed in the first place
          // we just ignore it until some data shows up or it's removed from the index
+         // since it's okay to have things in the list that may show up in the data later
+         //todo add an option to FirebaseIndex to auto-clean the index when data changes?
          if( ref ) {
             eventType = 'child_removed';
          }
@@ -314,14 +320,14 @@ var FirebaseIndex;
       for (key in refs) {
          if (refs.hasOwnProperty(key) && refs[key].loaded) {
             // must be external because key is mutable and we use it in a closure
-            getValAndNotify(dataPathFn(key), key, callback);
+            getValAndNotify(dataPathFn(key), refs[key], key, callback);
          }
       }
    }
 
-   function getValAndNotify(ref, key, callback) {
-      ref.once('value', function(ss) {
-         if( ss.val() !== null ) { defer(function() { callback(wrapSnap(ss, key)); }); }
+   function getValAndNotify(dataRef, idx, key, callback) {
+      dataRef.once('value', function(ss) {
+         if( ss.val() !== null ) { defer(function() { callback(wrapSnap(ss, key), idx.prevId, idx.idxValue); }); }
       });
    }
 
@@ -332,11 +338,13 @@ var FirebaseIndex;
          prevId: prevId,
          loaded: false,
          def: $? $.Deferred() : null,
-         ref: ss.ref(),
+         ref: childRef,
+         dataSub: null,
          key: key,
          idxValue: ss.val(),
          dispose: function() {
             childRef.off('value', cb);
+            childRef.dataSub && childRef.dataSub.dispose();
             delete list[key];
          }
       };
