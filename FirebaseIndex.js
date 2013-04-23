@@ -259,25 +259,53 @@ var FirebaseIndex;
          // since it's okay to have things in the list that may show up in the data later
          //todo add an option to FirebaseIndex to auto-clean the index when data changes?
          if( ref ) {
+            // since we could have records waiting on which doesn't exist before they load in, we need to
+            // deal with that case here by resolving any waiting methods
+            if( ref.def ) {
+               if( ref.def.state() === 'pending' ) {
+                  reassignPrevId(this.childRefs, ref);
+                  ref.def.resolve();
+               }
+            }
+            else if( ref.loaded === false ) {
+               reassignPrevId(this.childRefs, ref);
+               ref.loaded = true;
+            }
+
+            // notify listeners record was removed
             eventType = 'child_removed';
          }
+         else {
+            warn('Invalid key in index (no data exists)', key);
+         }
       }
-      else if( !ref.loaded ) {
-         // this is the first time we've seen this data, we'll mark it as added
-         // we make sure the prevId has already been marked "loaded" before triggering
-         // this event, that way they arrive at the client in the same order they came
-         // out of the index list, which prevents prevId from not existing
-         //eventType = 'child_added';
-         prevId = ref.prevId;
-         waitFor(this.childRefs, prevId, function() {
-            notifyListeners(this.eventListeners['child_added'], ss, ref);
-            ref.loaded = true;
-            ref.def && ref.def.resolve();
-         }.bind(this));
+      else if( ref ) {
+         if( !ref.loaded ) {
+            // this is the first time we've seen this data, we'll mark it as added
+            // we make sure the prevId has already been marked "loaded" before triggering
+            // this event, that way they arrive at the client in the same order they came
+            // out of the index list, which prevents prevId from not existing
+            //eventType = 'child_added';
+            prevId = ref.prevId;
+            this.indexRef.name && this.indexRef.name && this.indexRef.name() === 'grp' && console.log('waiting for', prevId, key); //debug
+            waitFor(this.childRefs, prevId, function() {
+               this.indexRef.name && this.indexRef.name && this.indexRef.name() === 'grp' && console.log('finished waiting for', prevId, key); //debug
+               notifyListeners(this.eventListeners['child_added'], ss, ref);
+               ref.loaded = true;
+               ref.def && ref.def.resolve();
+            }.bind(this));
+         }
+         else {
+   //         this.indexRef.name && this.indexRef.name() === 'grp' && console.log('changed'); //debug
+            // the value has been changed
+            eventType = 'child_changed';
+         }
       }
       else {
-         // the value has been changed
-         eventType = 'child_changed';
+         // this can happen and be legitimate; sometimes when records are removed from the index and modified
+         // at the same time (say I change a boolean that then removes the index entry) this condition happens
+         // however, it is also a good indicator of bugs, so we print it out to console for record keeping
+         warn('Received an unkeyed record; this is okay if it was modified just as the key was deleted', key);
       }
       eventType && notifyListeners(this.eventListeners[eventType], ss, ref);
       return this;
@@ -351,8 +379,19 @@ var FirebaseIndex;
       return childRef;
    }
 
+   function reassignPrevId(refs, missingRef) {
+      var newPrevId = missingRef.prevId, oldPrevId = missingRef.key;
+      _.find(refs, function(r, k) {
+         if(r.key === oldPrevId) {
+            r.prevId = newPrevId;
+            return true;
+         }
+         return false;
+      });
+   }
+
    function waitFor(refs, id, callback) {
-      var ref = refs[id];
+      var ref = id? refs[id] : null;
       if( !id || !ref || ref.loaded ) {
          callback();
       }
@@ -404,6 +443,12 @@ var FirebaseIndex;
    function wrapSnap(ss, key) {
       ss.name = function() { return key; };
       return ss;
+   }
+
+   function warn(txt, val) {
+      if( typeof(console) !== 'undefined' && console && console.warn ) {
+         console.warn(txt, ' ', val);
+      }
    }
 
    if (!Function.prototype.bind) {
