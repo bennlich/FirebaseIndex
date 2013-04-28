@@ -121,13 +121,22 @@ data object. For example: `function( key ) { return new Firebase('.../path/'+key
 ### add (key [,priority] [,onComplete])
 
 Add a key to a FirebaseIndex path and include that data record in our results. A priority may optionally be
-included to create sorted indices.
+included to create sorted indices. The value of the index will be `1`. To set custom values, use `addValue` instead.
 
 Note that if an index key exists which is not in the data path, this won't hurt anything. The child_added
 callback only gets invoked if data actually exists at that path. If, later, the data shows up, then child_added
 will be called at that time.
 
    - {String} key  matches an id in the data path
+   - {String|Number} [priority]
+   - {Function} [onComplete]
+
+### addValue (key, value, [,priority] [,onComplete])
+
+Behaves exactly the same as `add` but assigns a custom value to the index, instead of just a 1.
+
+   - {String} key  matches an id in the data path
+   - {String|Number} value
    - {String|Number} [priority]
    - {Function} [onComplete]
 
@@ -144,11 +153,15 @@ which also fires a child_removed event.
 Listen to child events on this index. The snapshots are the full data objects in the original data path, which are
 added/deleted/sorted according to the index's keys.
 
-When the callback is fired, the snapshot will contain the full data object from the data path.
-
    - {String}   eventType  one of child_added, child_changed, child_moved, or child_removed
    - {Function} [callback]
    - {Object}   [context]
+
+When the callback is fired, it receives the following arguments: `callback( snapshot, prevId, indexValue )`:
+
+   - {Firebase} snapshot - the full data object from the data path
+   - {String} prevId - the prevId, as described in Firebase's `on` function
+   - {*} indexValue - the value in the index record, useful for filtering or role based indices
 
 ### off (eventType [,callback] [,context])
 
