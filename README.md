@@ -89,7 +89,6 @@ utilize the following:
    var index = new FirebaseIndex(fb.child('users/789/friend_list'), function(key) { return fb.child('users/'+key+'/name'); } );
 ```
 
-
 You can use FirebaseIndex in node.js as well:
 
 ```javascript
