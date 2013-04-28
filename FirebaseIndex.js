@@ -287,16 +287,13 @@ var FirebaseIndex;
             // out of the index list, which prevents prevId from not existing
             //eventType = 'child_added';
             prevId = ref.prevId;
-            this.indexRef.name && this.indexRef.name && this.indexRef.name() === 'grp' && console.log('waiting for', prevId, key); //debug
             waitFor(this.childRefs, prevId, function() {
-               this.indexRef.name && this.indexRef.name && this.indexRef.name() === 'grp' && console.log('finished waiting for', prevId, key); //debug
                notifyListeners(this.eventListeners['child_added'], ss, ref);
                ref.loaded = true;
                ref.def && ref.def.resolve();
             }.bind(this));
          }
          else {
-   //         this.indexRef.name && this.indexRef.name() === 'grp' && console.log('changed'); //debug
             // the value has been changed
             eventType = 'child_changed';
          }
